@@ -3,176 +3,142 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChatGPT estilo WhatsApp</title>
+    <title>Alarma iOS Style</title>
     <style>
+        * {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            background-color: #e5ddd5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            flex-direction: column;
+            background: #f8f8f8;
+            text-align: center;
+            padding: 20px;
         }
-        .chat-container {
-            width: 350px;
-            height: 500px;
-            background: #fff;
-            border-radius: 10px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
+
+        .container {
+            background: white;
+            max-width: 400px;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
-        .messages {
-            flex: 1;
-            padding: 10px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
+
+        h1 {
+            font-size: 22px;
+            color: #333;
+            margin-bottom: 15px;
         }
-        .message {
-            padding: 8px 12px;
-            margin: 5px;
-            border-radius: 10px;
-            max-width: 80%;
-        }
-        .user-message {
-            background: #dcf8c6;
-            align-self: flex-end;
-        }
-        .bot-message {
-            background: #f1f0f0;
-            align-self: flex-start;
-        }
-        .input-container {
-            display: flex;
-            padding: 10px;
-            background: #f0f0f0;
-        }
+
         input {
-            flex: 1;
+            width: 100%;
             padding: 10px;
-            border: none;
-            border-radius: 5px;
+            font-size: 18px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            outline: none;
+            text-align: center;
+            margin-bottom: 15px;
         }
+
         button {
-            background: #25d366;
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: bold;
             color: white;
+            background: #007AFF;
             border: none;
-            padding: 10px;
-            margin-left: 5px;
-            border-radius: 5px;
+            border-radius: 12px;
             cursor: pointer;
+            transition: 0.2s;
         }
-        .typing {
-            font-style: italic;
-            color: gray;
+
+        button:hover {
+            background: #005ecb;
         }
-        .keyword-buttons {
-            margin-top: 10px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            justify-content: center;
+
+        .alarm-list {
+            list-style: none;
+            margin-top: 15px;
         }
-        .keyword-buttons button {
-            background: #34b7f1;
-            padding: 5px 10px;
-            border-radius: 5px;
+
+        .alarm-list li {
+            background: #f1f1f1;
+            padding: 10px;
+            margin-top: 5px;
+            border-radius: 10px;
+            font-size: 16px;
+            color: #333;
         }
     </style>
 </head>
 <body>
-    <div class="chat-container">
-        <div class="messages" id="messages"></div>
-        <div class="input-container">
-            <input type="text" id="userInput" placeholder="Escribe un mensaje...">
-            <button id="sendButton" onclick="sendMessage()">Enviar</button>
-        </div>
+
+    <div class="container">
+        <h1>⏰ Configurador de Alarmas</h1>
+        <input type="time" id="alarm-time">
+        <button onclick="setAlarm()">Agregar Alarma</button>
+        <ul class="alarm-list" id="alarm-list"></ul>
     </div>
-    <div class="keyword-buttons" id="keywordButtons"></div>
-    
+
     <script>
-        const keywordResponses = {
-            "hola": "¡Hola! ¿Cómo estás?",
-            "simon": "GAY",
-            "adios": "Nos vemos, cuídate.",
-            "cómo estás": "Bien, ¿y tú?",
-            "qué haces": "Aquí, esperando tu mensaje.",
-            "dónde estás": "En tu pantalla, como siempre.",
-            "quién eres": "Soy un bot de chat, tu compañero virtual.",
-            "qué opinas": "Tengo muchas opiniones, dime el tema.",
-            "qué edad tienes": "No tengo edad, pero si tuviera, sería joven.",
-            "dime un chiste": "¿Por qué el libro de matemáticas estaba triste? Porque tenía demasiados problemas.",
-            "me siento triste": "Lo siento. Si necesitas hablar, estoy aquí.",
-            "me aburro": "Vamos a hablar de algo interesante.",
-            "qué es la vida": "Una serie de momentos que debemos aprovechar.",
-            "qué es el amor": "Algo complicado, pero bonito.",
-            "qué opinas de los humanos": "Son interesantes, pero un poco caóticos.",
-            "hazme reir": "Intentaré, pero mi humor es programado.",
-            "tu codigo no te permite decirlo": "Si..."
-        };
+        let alarms = [];
 
-        const randomResponses = [
-            "¡Eso suena interesante!", "Cuéntame más.", "¡Buen punto!", "Eso es algo para pensar.",
-            "¡Suena genial!", "Eso podría ser posible.", "Interesante perspectiva.", "Eso tiene sentido.",
-            "¿Por qué piensas eso?", "Explícame más sobre eso.", "Eso me hace pensar.", "¡Eso es un buen punto de vista!",
-            "Voy a reflexionar sobre ello.", "Muy intrigante.", "Podrías darme un ejemplo?", "Me encantaría saber más.",
-            "Creo que podemos profundizar más.", "Eso plantea una nueva perspectiva.", "Muy bien pensado.", "Eso es fascinante.",
-            "Creo que podríamos explorar más.", "Me gusta cómo lo ves.", "Eso me intriga.", "Voy a investigarlo más.",
-            "Eso es una gran idea.", "Me parece lógico.", "¿Cómo llegaste a esa conclusión?", "Explícame tu razonamiento."
-        ];
+        function setAlarm() {
+            const alarmTime = document.getElementById("alarm-time").value;
+            if (!alarmTime) {
+                alert("Por favor, selecciona una hora.");
+                return;
+            }
 
-        function populateKeywordButtons() {
-            const container = document.getElementById("keywordButtons");
-            Object.keys(keywordResponses).forEach(keyword => {
-                const button = document.createElement("button");
-                button.textContent = keyword;
-                button.onclick = () => {
-                    document.getElementById("userInput").value = keyword;
-                };
-                container.appendChild(button);
+            alarms.push(alarmTime);
+            localStorage.setItem("alarms", JSON.stringify(alarms));
+            showAlarms();
+            checkAlarms();
+        }
+
+        function showAlarms() {
+            const alarmList = document.getElementById("alarm-list");
+            alarmList.innerHTML = "";
+            alarms.forEach(time => {
+                let li = document.createElement("li");
+                li.textContent = `⏱ Alarma: ${time}`;
+                alarmList.appendChild(li);
             });
         }
 
-        async function sendMessage() {
-            const userInput = document.getElementById("userInput");
-            const messages = document.getElementById("messages");
-            const sendButton = document.getElementById("sendButton");
-            
-            const userMessage = document.createElement("div");
-            userMessage.classList.add("message", "user-message");
-            userMessage.textContent = userInput.value;
-            messages.appendChild(userMessage);
-            messages.scrollTop = messages.scrollHeight;
-            
-            userInput.disabled = true;
-            sendButton.disabled = true;
-            
-            const typingMessage = document.createElement("div");
-            typingMessage.classList.add("message", "bot-message", "typing");
-            typingMessage.textContent = "Escribiendo...";
-            messages.appendChild(typingMessage);
-            messages.scrollTop = messages.scrollHeight;
-            
-            setTimeout(() => {
-                messages.removeChild(typingMessage);
-                const botMessage = document.createElement("div");
-                botMessage.classList.add("message", "bot-message");
-                
-                let response = keywordResponses[userInput.value.toLowerCase()] || randomResponses[Math.floor(Math.random() * randomResponses.length)];
-                
-                botMessage.textContent = response;
-                messages.appendChild(botMessage);
-                messages.scrollTop = messages.scrollHeight;
-                
-                userInput.disabled = false;
-                sendButton.disabled = false;
-                userInput.value = "";
-            }, 2000);
+        function checkAlarms() {
+            setInterval(() => {
+                let now = new Date();
+                let currentTime = now.getHours().toString().padStart(2, "0") + ":" + now.getMinutes().toString().padStart(2, "0");
+
+                if (alarms.includes(currentTime)) {
+                    notifyAlarm();
+                }
+            }, 1000);
         }
 
-        populateKeywordButtons();
+        function notifyAlarm() {
+            const audio = new Audio("https://www.soundjay.com/button/beep-07.wav");
+            audio.play();
+
+            if (Notification.permission === "granted") {
+                new Notification("¡Alarma activada!", { body: "Es hora de tu alarma." });
+            } else {
+                Notification.requestPermission();
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            alarms = JSON.parse(localStorage.getItem("alarms")) || [];
+            showAlarms();
+            checkAlarms();
+        });
     </script>
+
 </body>
 </html>
