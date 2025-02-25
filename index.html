@@ -25,6 +25,7 @@
             padding: 20px;
             border-radius: 20px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            display: none;
         }
 
         h1 {
@@ -74,11 +75,28 @@
             font-size: 16px;
             color: #333;
         }
+
+        .terms {
+            background: white;
+            max-width: 400px;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
     </style>
 </head>
 <body>
 
-    <div class="container">
+    <div class="terms" id="terms">
+        <h1>📜 Términos y Condiciones</h1>
+        <p>Esta aplicación de alarmas enviará notificaciones y reproducirá sonido para despertarte. 
+        Al aceptar, confirmas que no llorarás si la alarma te despierta.</p>
+        <p>Si no aceptas, no podrás usar la aplicación.</p>
+        <button onclick="acceptTerms()">Aceptar y Continuar</button>
+    </div>
+
+    <div class="container" id="app" style="display: none;">
         <h1>⏰ Configurador de Alarmas</h1>
         <input type="time" id="alarm-time">
         <button onclick="setAlarm()">Agregar Alarma</button>
@@ -87,6 +105,18 @@
 
     <script>
         let alarms = [];
+
+        function acceptTerms() {
+            Notification.requestPermission().then(permission => {
+                if (permission === "granted") {
+                    document.getElementById("terms").style.display = "none";
+                    document.getElementById("app").style.display = "block";
+                    checkAlarms();
+                } else {
+                    alert("Debes aceptar las notificaciones para usar la app.");
+                }
+            });
+        }
 
         function setAlarm() {
             const alarmTime = document.getElementById("alarm-time").value;
@@ -98,7 +128,6 @@
             alarms.push(alarmTime);
             localStorage.setItem("alarms", JSON.stringify(alarms));
             showAlarms();
-            checkAlarms();
         }
 
         function showAlarms() {
@@ -129,14 +158,13 @@
             if (Notification.permission === "granted") {
                 new Notification("¡Alarma activada!", { body: "Es hora de tu alarma." });
             } else {
-                Notification.requestPermission();
+                console.log("Permiso de notificación denegado.");
             }
         }
 
         document.addEventListener("DOMContentLoaded", () => {
             alarms = JSON.parse(localStorage.getItem("alarms")) || [];
             showAlarms();
-            checkAlarms();
         });
     </script>
 
